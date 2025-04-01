@@ -52,14 +52,14 @@
             left: 100%;
             width: auto;
             min-width: 150px;
-            height: 30px;
+            height: 40px;
             background-color: orange;
             border-radius: 50%;
             cursor: pointer;
-            animation: swim 5s linear infinite;
+            animation: swim 15s linear infinite; /* Increased speed */
             padding: 5px;
             white-space: nowrap;
-            font-size: 12px;
+            font-size: 20px; /* Increased font size */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -73,6 +73,10 @@
             }
         }
         #score {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        #timer {
             font-size: 24px;
             margin: 10px 0;
         }
@@ -90,6 +94,7 @@
     <div class="background-dots" id="dots"></div>
     <h1>Phishing Game</h1>
     <div id="score">Score: 0</div>
+    <div id="timer">Time Left: 0:15</div>
     <div id="controls">
         <button id="start-btn">Start</button>
         <button id="stop-btn" disabled>Stop</button>
@@ -100,21 +105,42 @@
     <script>
         const gameContainer = document.getElementById('game-container');
         const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
         const startBtn = document.getElementById('start-btn');
         const stopBtn = document.getElementById('stop-btn');
         const resumeBtn = document.getElementById('resume-btn');
 
         let score = 0;
         let gameInterval;
-        let gameTime = 300000; // 5 minutes in milliseconds
+        let gameTime = 15000; // 15 seconds in milliseconds
         let gameTimer;
         let isPaused = false;
+        let timeLeft = gameTime / 1000; // Time left in seconds
+        let report = [];
 
         const links = [
-            { url: 'https://safe-site.com', isPhishing: false },
-            { url: 'https://phishing-site.com', isPhishing: true },
-            { url: 'https://another-safe-site.com', isPhishing: false },
-            { url: 'https://malicious-site.com', isPhishing: true },
+            // 10 legitimate sites
+            { url: 'https://www.google.com', isPhishing: false },
+            { url: 'https://www.wikipedia.org', isPhishing: false },
+            { url: 'https://www.github.com', isPhishing: false },
+            { url: 'https://www.stackoverflow.com', isPhishing: false },
+            { url: 'https://www.reddit.com', isPhishing: false },
+            { url: 'https://www.linkedin.com', isPhishing: false },
+            { url: 'https://www.amazon.com', isPhishing: false },
+            { url: 'https://www.microsoft.com', isPhishing: false },
+            { url: 'https://www.apple.com', isPhishing: false },
+            { url: 'https://www.netflix.com', isPhishing: false },
+            // 10 phishing sites
+            { url: 'https://www.g00gle.com', isPhishing: true }, // Lookalike of Google
+            { url: 'https://www.wikip3dia.com', isPhishing: true }, // Lookalike of Wikipedia
+            { url: 'https://www.git-hub.com', isPhishing: true }, // Lookalike of GitHub
+            { url: 'https://www.st4ckoverflow.com', isPhishing: true }, // Lookalike of StackOverflow
+            { url: 'https://www.reddit.co', isPhishing: true }, // Lookalike of Reddit
+            { url: 'https://www.linkdln.com', isPhishing: true }, // Lookalike of LinkedIn
+            { url: 'https://www.amaz0n.com', isPhishing: true }, // Lookalike of Amazon
+            { url: 'https://www.micr0soft.com', isPhishing: true }, // Lookalike of Microsoft
+            { url: 'https://www.appl3.com', isPhishing: true }, // Lookalike of Apple
+            { url: 'https://www.netf1ix.com', isPhishing: true }, // Lookalike of Netflix
         ];
 
         function createFish() {
@@ -126,22 +152,24 @@
             fish.dataset.isPhishing = link.isPhishing;
             fish.textContent = link.url; // Add the URL text to the fish
             
-            // Update styles to accommodate the URL text
-            fish.style.width = 'auto';  // Allow width to fit content
-            fish.style.minWidth = '150px';  // Minimum width for visibility
-            fish.style.padding = '5px';  // Add some padding
-            fish.style.whiteSpace = 'nowrap';  // Keep URL on single line
-            fish.style.fontSize = '12px';  // Smaller font size
-            fish.style.display = 'flex';  // Use flex for better text alignment
-            fish.style.alignItems = 'center';  // Center text vertically
-            fish.style.justifyContent = 'center';  // Center text horizontally
-
             fish.addEventListener('click', () => {
                 if (link.isPhishing) {
+                    // Correct click on malicious link
+                    fish.style.backgroundColor = '#ff4444';  // Red
                     score++;
-                    scoreDisplay.textContent = `Score: ${score}`;
+                    report.push({ message: `${link.url} is unsafe. You clicked it!`, isPhishing: true });
+                } else {
+                    // Incorrect click on safe link
+                    fish.style.backgroundColor = '#44ff44';  // Green
+                    if (score > 0) {
+                        score--;
+                    }
+                    report.push({ message: `${link.url} is safe. You clicked it!`, isPhishing: false });
                 }
-                fish.remove();
+                scoreDisplay.textContent = `Score: ${score}`;
+                setTimeout(() => {
+                    fish.remove();
+                }, 500);
             });
 
             gameContainer.appendChild(fish);
@@ -153,22 +181,29 @@
 
         function startGame() {
             score = 0;
+            timeLeft = gameTime / 1000; // Reset time left
             scoreDisplay.textContent = `Score: ${score}`;
+            timerDisplay.textContent = `Time Left: ${Math.floor(timeLeft / 60)}:${('0' + (timeLeft % 60)).slice(-2)}`;
             startBtn.disabled = true;
             stopBtn.disabled = false;
             resumeBtn.disabled = true;
             isPaused = false;
 
             gameInterval = setInterval(createFish, 1000);
-            gameTimer = setTimeout(() => {
-                stopGame();
-                alert('Game Over! Your score is: ' + score);
-            }, gameTime);
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time Left: ${Math.floor(timeLeft / 60)}:${('0' + (timeLeft % 60)).slice(-2)}`;
+                if (timeLeft <= 0) {
+                    stopGame();
+                    localStorage.setItem('phishingGameReport', JSON.stringify(report)); // Store report in localStorage
+                    window.location.href = 'report.html'; // Redirect to report page
+                }
+            }, 1000);
         }
 
         function stopGame() {
             clearInterval(gameInterval);
-            clearTimeout(gameTimer);
+            clearInterval(gameTimer);
             stopBtn.disabled = true;
             resumeBtn.disabled = false;
             isPaused = true;
@@ -184,15 +219,21 @@
             isPaused = false;
 
             gameInterval = setInterval(createFish, 1000);
-            gameTimer = setTimeout(() => {
-                stopGame();
-                alert('Game Over! Your score is: ' + score);
-            }, gameTime);
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time Left: ${Math.floor(timeLeft / 60)}:${('0' + (timeLeft % 60)).slice(-2)}`;
+                if (timeLeft <= 0) {
+                    stopGame();
+                    localStorage.setItem('phishingGameReport', JSON.stringify(report)); // Store report in localStorage
+                    window.location.href = 'report.html'; // Redirect to report page
+                }
+            }, 1000);
         }
 
         startBtn.addEventListener('click', startGame);
         stopBtn.addEventListener('click', stopGame);
         resumeBtn.addEventListener('click', resumeGame);
+        
         function createDots() {
             const dotsContainer = document.getElementById('dots');
             for (let i = 0; i < 50; i++) {

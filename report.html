@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1c1c1c;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #87CEEB;
+        }
+        .report {
+            display: flex;
+            flex-wrap: wrap; /* Allow cards to wrap to the next line */
+            justify-content: center; /* Center the cards */
+            margin: 20px auto;
+            width: 80%;
+            max-width: 1200px; /* Set a max width for the report */
+        }
+        .card {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px;
+            width: calc(20% - 20px); /* 5 cards in a row with margin */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box; /* Include padding and border in width */
+        }
+        .safe {
+            color: #44ff44;
+        }
+        .unsafe {
+            color: #ff4444;
+        }
+        .explanation {
+            font-size: 14px;
+            margin-top: 5px;
+            color: #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Report</h1>
+    <div class="report" id="report"></div>
+    <button onclick="window.location.href='index.html'">Play Again</button>
+
+    <script>
+        // Get the report data from localStorage
+        const reportData = JSON.parse(localStorage.getItem('phishingGameReport'));
+        const reportContainer = document.getElementById('report');
+
+        // Explanation for phishing tactics
+        const phishingExplanations = {
+            'https://www.g00gle.com': 'This URL uses a zero instead of an "o", making it look like Google but is actually a phishing site.',
+            'https://www.wikip3dia.com': 'This URL replaces the "a" with a "3", which can trick users into thinking it is Wikipedia.',
+            'https://www.git-hub.com': 'This URL adds a hyphen, which can confuse users into thinking it is GitHub.',
+            'https://www.st4ckoverflow.com': 'This URL uses a "4" instead of "a", making it look like StackOverflow.',
+            'https://www.reddit.co': 'This URL is missing the "m" in ".com", which can mislead users.',
+            'https://www.linkdln.com': 'This URL has a typo in "LinkedIn", which can trick users.',
+            'https://www.amaz0n.com': 'This URL uses a zero instead of an "o", making it look like Amazon.',
+            'https://www.micr0soft.com': 'This URL uses a zero instead of an "o", making it look like Microsoft.',
+            'https://www.appl3.com': 'This URL uses a "3" instead of "e", making it look like Apple.',
+            'https://www.netf1ix.com': 'This URL uses a "1" instead of "l", making it look like Netflix.'
+        };
+
+        if (reportData) {
+            reportData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = item.isPhishing ? 'unsafe' : 'safe';
+                messageDiv.textContent = item.message;
+
+                // Add explanation for phishing links
+                if (item.isPhishing) {
+                    const explanation = document.createElement('div');
+                    explanation.className = 'explanation';
+                    explanation.textContent = phishingExplanations[item.message.split(' ')[0]] || 'This link is a phishing attempt. Be cautious!';
+                    card.appendChild(messageDiv);
+                    card.appendChild(explanation);
+                } else {
+                    card.appendChild(messageDiv);
+                }
+
+                reportContainer.appendChild(card);
+            });
+        } else {
+            reportContainer.textContent = "No report data available.";
+        }
+    </script>
+</body>
+</html>
