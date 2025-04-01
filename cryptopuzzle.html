@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptography Puzzle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #00ff00;
+            background: #000000;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .encrypted-text {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+
+        .input-section {
+            margin: 20px 0;
+        }
+
+        input, select, button {
+            font-size: 1em;
+            padding: 10px;
+            margin: 5px;
+            background: #1a1a1a;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #00ff00;
+            color: #000000;
+            cursor: pointer;
+        }
+
+        .hint {
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        .timer {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cryptography Puzzle</h1>
+        <p class="encrypted-text">Encrypted Text: <span id="encryptedText">Uifsf jt b tfdsfu dpef!</span></p>
+        <div class="input-section">
+            <label for="cipher">Cipher:</label>
+            <select id="cipher">
+                <option value="caesar">Caesar Cipher</option>
+                <option value="vigenere">Vigenère Cipher</option>
+            </select>
+            <label for="key">Key:</label>
+            <input type="text" id="key" placeholder="Enter key">
+            <button onclick="decrypt()">Decrypt</button>
+        </div>
+        <p class="hint" id="hint">Hint: Try using a Caesar cipher with a shift of 1.</p>
+        <p class="timer" id="timer">Time Left: 60 seconds</p>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        let timeLeft = 60;
+        const timerElement = document.getElementById('timer');
+        const encryptedText = document.getElementById('encryptedText').textContent;
+
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `Time Left: ${timeLeft} seconds`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Time's up! Try again.");
+                }
+            }, 1000);
+        }
+
+        function decrypt() {
+            const cipher = document.getElementById('cipher').value;
+            const key = document.getElementById('key').value;
+            const resultElement = document.getElementById('result');
+            let decryptedText = '';
+
+            if (cipher === 'caesar') {
+                const shift = parseInt(key);
+                if (isNaN(shift)) {
+                    resultElement.textContent = 'Invalid key for Caesar cipher.';
+                    return;
+                }
+                decryptedText = caesarDecrypt(encryptedText, shift);
+            } else if (cipher === 'vigenere') {
+                decryptedText = vigenereDecrypt(encryptedText, key);
+            }
+
+            resultElement.textContent = `Decrypted Text: ${decryptedText}`;
+        }
+
+        function caesarDecrypt(text, shift) {
+            return text.split('').map(char => {
+                if (char.match(/[a-z]/i)) {
+                    const code = char.charCodeAt(0);
+                    const base = char >= 'a' ? 97 : 65;
+                    return String.fromCharCode(((code - base - shift + 26) % 26) + base);
+                }
+                return char;
+            }).join('');
+        }
+
+        function vigenereDecrypt(text, key) {
+            if (!key) return 'Invalid key for Vigenère cipher.';
+            key = key.toLowerCase();
+            let keyIndex = 0;
+            return text.split('').map(char => {
+                if (char.match(/[a-z]/i)) {
+                    const code = char.charCodeAt(0);
+                    const base = char >= 'a' ? 97 : 65;
+                    const shift = key[keyIndex % key.length].charCodeAt(0) - 97;
+                    keyIndex++;
+                    return String.fromCharCode(((code - base - shift + 26) % 26) + base);
+                }
+                return char;
+            }).join('');
+        }
+
+        startTimer();
+    </script>
+</body>
+</html>

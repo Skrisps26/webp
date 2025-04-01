@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1c1c1c, #333);
+            color: white;
+        }
+        .background-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Prevent interaction */
+            z-index: -1;
+        }
+
+        .dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(0, 191, 255, 0.7);
+            animation: moveDots linear infinite;
+        }
+
+        @keyframes moveDots {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(100vh);
+            }
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background-color: #87CEEB;
+            overflow: hidden;
+            border: 2px solid #000;
+        }
+        .fish {
+            position: absolute;
+            top: 0;
+            left: 100%;
+            width: auto;
+            min-width: 150px;
+            height: 30px;
+            background-color: orange;
+            border-radius: 50%;
+            cursor: pointer;
+            animation: swim 5s linear infinite;
+            padding: 5px;
+            white-space: nowrap;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @keyframes swim {
+            from {
+                left: 100%;
+            }
+            to {
+                left: -60px;
+            }
+        }
+        #score {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        #controls {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-dots" id="dots"></div>
+    <h1>Phishing Game</h1>
+    <div id="score">Score: 0</div>
+    <div id="controls">
+        <button id="start-btn">Start</button>
+        <button id="stop-btn" disabled>Stop</button>
+        <button id="resume-btn" disabled>Resume</button>
+    </div>
+    <div id="game-container"></div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const scoreDisplay = document.getElementById('score');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+
+        let score = 0;
+        let gameInterval;
+        let gameTime = 300000; // 5 minutes in milliseconds
+        let gameTimer;
+        let isPaused = false;
+
+        const links = [
+            { url: 'https://safe-site.com', isPhishing: false },
+            { url: 'https://phishing-site.com', isPhishing: true },
+            { url: 'https://another-safe-site.com', isPhishing: false },
+            { url: 'https://malicious-site.com', isPhishing: true },
+        ];
+
+        function createFish() {
+            const fish = document.createElement('div');
+            fish.classList.add('fish');
+            fish.style.top = Math.random() * (gameContainer.offsetHeight - 30) + 'px';
+
+            const link = links[Math.floor(Math.random() * links.length)];
+            fish.dataset.isPhishing = link.isPhishing;
+            fish.textContent = link.url; // Add the URL text to the fish
+            
+            // Update styles to accommodate the URL text
+            fish.style.width = 'auto';  // Allow width to fit content
+            fish.style.minWidth = '150px';  // Minimum width for visibility
+            fish.style.padding = '5px';  // Add some padding
+            fish.style.whiteSpace = 'nowrap';  // Keep URL on single line
+            fish.style.fontSize = '12px';  // Smaller font size
+            fish.style.display = 'flex';  // Use flex for better text alignment
+            fish.style.alignItems = 'center';  // Center text vertically
+            fish.style.justifyContent = 'center';  // Center text horizontally
+
+            fish.addEventListener('click', () => {
+                if (link.isPhishing) {
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                }
+                fish.remove();
+            });
+
+            gameContainer.appendChild(fish);
+
+            fish.addEventListener('animationend', () => {
+                fish.remove();
+            });
+        }
+
+        function startGame() {
+            score = 0;
+            scoreDisplay.textContent = `Score: ${score}`;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            resumeBtn.disabled = true;
+            isPaused = false;
+
+            gameInterval = setInterval(createFish, 1000);
+            gameTimer = setTimeout(() => {
+                stopGame();
+                alert('Game Over! Your score is: ' + score);
+            }, gameTime);
+        }
+
+        function stopGame() {
+            clearInterval(gameInterval);
+            clearTimeout(gameTimer);
+            stopBtn.disabled = true;
+            resumeBtn.disabled = false;
+            isPaused = true;
+
+            // Remove all existing fish from the container
+            const existingFish = document.querySelectorAll('.fish');
+            existingFish.forEach(fish => fish.remove());
+        }
+
+        function resumeGame() {
+            stopBtn.disabled = false;
+            resumeBtn.disabled = true;
+            isPaused = false;
+
+            gameInterval = setInterval(createFish, 1000);
+            gameTimer = setTimeout(() => {
+                stopGame();
+                alert('Game Over! Your score is: ' + score);
+            }, gameTime);
+        }
+
+        startBtn.addEventListener('click', startGame);
+        stopBtn.addEventListener('click', stopGame);
+        resumeBtn.addEventListener('click', resumeGame);
+        function createDots() {
+            const dotsContainer = document.getElementById('dots');
+            for (let i = 0; i < 50; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                dot.style.left = `${Math.random() * 100}vw`;
+                dot.style.top = `${Math.random() * 100}vh`;
+                dot.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                dot.style.animationDelay = `${Math.random() * 5}s`;
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        createDots();
+    </script>
+</body>
+</html>
